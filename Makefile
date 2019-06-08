@@ -2,14 +2,14 @@
 # Makefile for STM32F1 Discovery board projects
 
 OUTPATH = build
-PROJECT = $(OUTPATH)/stmdriver
+PROJECT = $(OUTPATH)/smart_heat
 OPENOCD_SCRIPT_DIR ?= /usr/share/openocd/scripts
 HEAP_SIZE = 0x400
 
 ################
 # Sources
 
-SOURCES_S = core/startup_stm32f100xb.s
+SOURCES_S = core/startup_stm32f103xb.s
 SOURCES_C = $(wildcard *.c core/*.c plib/*.c lib/*.c)
 SOURCES = $(SOURCES_S) $(SOURCES_C)
 OBJS = $(SOURCES_S:.s=.o) $(SOURCES_C:.c=.o)
@@ -20,7 +20,7 @@ INCLUDES += -I core
 INCLUDES += -I plib
 INCLUDES += -I lib
 
-DEFINES = -DSTM32 -DSTM32F1 -DSTM32F100xB -DFLASH_ACR_LATENCY -DHEAP_SIZE=$(HEAP_SIZE)
+DEFINES = -DSTM32 -DSTM32F1 -DSTM32F103xB -DHEAP_SIZE=$(HEAP_SIZE)
 
 # Compiler/Assembler/Linker/etc
 
@@ -52,7 +52,7 @@ CFLAGS_EXTRA = -nostartfiles -nodefaultlibs -nostdlib\
 CFLAGS += $(DEFINES) $(MCUFLAGS) $(DEBUG_OPTIMIZE_FLAGS) $(CFLAGS_EXTRA) $(INCLUDES)
 
 LDFLAGS = -static $(MCUFLAGS) -Wl,--start-group -lgcc -lc -lg -Wl,--end-group\
-	  -Wl,--gc-sections -T STM32F100XB_FLASH.ld
+	  -Wl,--gc-sections -T stm32f103c8tx.ld
 
 .PHONY: all clean flash erase examples
 
@@ -66,30 +66,6 @@ clean:
 	$(RM) $(OBJS) $(PROJECT).elf $(PROJECT).bin $(PROJECT).asm \
 	$(EXAMPLES:=.bin) $(EXAMPLES:=.elf) ./examples/*.o ./src/*.o
 
-# Examples
-
-examples: $(EXAMPLES:=.bin)
-
-exti.elf: ./examples/exti.o $(EX_OBJS)
-	$(LD) $^ $(LDFLAGS) -o $@
-	$(SIZE) -A $@
-
-usart.elf: ./examples/usart.o $(EX_OBJS)
-	$(LD) $^ $(LDFLAGS) -o $@
-	$(SIZE) -A $@
-
-adc2dma.elf: ./examples/adc2dma.o $(EX_OBJS)
-	$(LD) $^ $(LDFLAGS) -o $@
-	$(SIZE) -A $@
-
-printf.elf: ./examples/printf.o ./src/xprintf.o $(EX_OBJS)
-	$(LD) $^ $(LDFLAGS) -o $@
-	$(SIZE) -A $@
-
-spi.elf: ./examples/spi.o $(EX_OBJS)
-	$(LD) $^ $(LDFLAGS) -o $@
-	$(SIZE) -A $@
-
 # Hardware specific
 
 flash: $(PROJECT).bin
@@ -100,7 +76,7 @@ erase:
 
 gdb-server-ocd:
 	$(OPENOCD) -f $(OPENOCD_SCRIPT_DIR)/interface/stlink-v2.cfg \
-		   -f $(OPENOCD_SCRIPT_DIR)/target/stm32f0x.cfg
+		   -f $(OPENOCD_SCRIPT_DIR)/target/stm32f1x.cfg
 
 gdb-server-st:
 	st-util
