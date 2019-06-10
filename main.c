@@ -3,6 +3,11 @@
 #include "stm32f1xx_ll_gpio.h"
 #include "stm32f1xx_ll_rcc.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include "err_manager.h"
+
 /**
   * System Clock Configuration
   * The system Clock is configured as follow :
@@ -60,22 +65,14 @@ void gpio_config(void)
     LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
 }
 
-void SysTick_Handler(void)
-{
-    static int time_cnt = 0;
-    time_cnt++;
-    if (time_cnt == 999) {
-        LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
-        time_cnt = 0;
-    }
-}
-
 int main(void)
 {
     rcc_config();
     gpio_config();
-    while (1) {
+    NVIC_SetPriorityGrouping(0);
 
-    }
+    xTaskCreateStatic(err_manager, "ERR_MAN", ERR_MAN_STACK_DEPTH,
+                      NULL, 1, err_manager_ts, &err_manager_tb);
+    vTaskStartScheduler();
     return 0;
 }
