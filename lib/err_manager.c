@@ -1,6 +1,7 @@
 #include "err_manager.h"
 #include "oled_driver.h"
 #include "xprintf.h"
+#include "rtc.h"
 
 #include "stm32f1xx_ll_gpio.h"
 
@@ -34,6 +35,7 @@ void err_manager(void *arg)
 
     oled_config();
     printf_config();
+    rtc_init();
 
     xprintf("\n     Welcome to!\n\n");
     xprintf("  Smart Heat project\n");
