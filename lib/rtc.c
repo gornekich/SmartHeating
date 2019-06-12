@@ -3,7 +3,18 @@
 #include "stm32f1xx_ll_pwr.h"
 #include "stm32f1xx_ll_rcc.h"
 
-#include "FreeRTOS.h"
+#include <string.h>
+
+/*
+ * ----------------------------------------------------------------------------
+ * Private variables
+ * ----------------------------------------------------------------------------
+ */
+
+/*
+ * Main RTC control structure object
+ */
+static rtc_ctrl_t rtc_ctrl;
 
 /*
  * ----------------------------------------------------------------------------
@@ -35,6 +46,19 @@ static uint8_t rtc_year_is_leap(uint16_t year) {
  * Public functions
  * ----------------------------------------------------------------------------
  */
+
+/*
+ * Add task notifier
+ */
+rtc_err_t rtc_add_notifier(rtc_task_notifier_t *task_notifier)
+{
+    if (rtc_ctrl.num_task_notify > MAX_TASK_NOTIFY - 2)
+        return RTC_TOO_MUCH_NOTIFIERS;
+    memcpy(&rtc_ctrl.rtc_task_notifier[rtc_ctrl.num_task_notify],
+           task_notifier, sizeof(rtc_task_notifier_t));
+    rtc_ctrl.num_task_notify++;
+    return RTC_NO_ERR;
+}
 
 /*
  * Initialization function
@@ -82,11 +106,7 @@ rtc_err_t rtc_init(void)
          */
         LL_RTC_EnableIT_SEC(RTC);
         while (!LL_RTC_IsActiveFlag_RTOF(RTC));
-        /*
-         * Update backup register value after RTC initialization
-         */
-        LL_RTC_BKP_SetRegister(RTC_BKP, RTC_BKP_REG, RTC_BKP_REG_CHECK_VALUE);
-        rtc_err = RTC_DESYNCHRONIZATION;
+        rtc_ctrl.rtc_err_status = RTC_DESYNCHRONIZATION;
     }
     else {
         /*
@@ -95,7 +115,7 @@ rtc_err_t rtc_init(void)
         while (!LL_RTC_IsActiveFlag_RS(RTC));
         LL_RTC_EnableIT_SEC(RTC);
         while (!LL_RTC_IsActiveFlag_RTOF(RTC));
-        rtc_err = RTC_NO_ERR;
+        rtc_ctrl.rtc_err_status = RTC_NO_ERR;
     }
     /*
      * Enable backup registers write protection
@@ -106,7 +126,7 @@ rtc_err_t rtc_init(void)
      */
     NVIC_SetPriority(RTC_IRQN, RTC_IRQN_PRIORITY);
     NVIC_EnableIRQ(RTC_IRQN);
-    return rtc_err;
+    return rtc_ctrl.rtc_err_status;
 }
 
 /*
@@ -154,6 +174,11 @@ rtc_err_t rtc_set(rtc_time_t* rtc_time)
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_BKP);
     LL_PWR_EnableBkUpAccess();
     /*
+     * Update backup register value after RTC initialization
+     */
+    LL_RTC_BKP_SetRegister(RTC_BKP, RTC_BKP_REG, RTC_BKP_REG_CHECK_VALUE);
+    rtc_ctrl.rtc_err_status = RTC_NO_ERR;
+    /*
      * Write RTC CNT register
      */
     while (!LL_RTC_IsActiveFlag_RTOF(RTC));
@@ -166,13 +191,13 @@ rtc_err_t rtc_set(rtc_time_t* rtc_time)
      * Enable backup registers write protection
      */
     LL_PWR_DisableBkUpAccess();
-    return RTC_NO_ERR;
+    return rtc_ctrl.rtc_err_status;
 }
 
 /*
- * Getting date and time function
+ * Getting date and time function with 1 second precision
  */
-rtc_err_t rtc_get(rtc_time_t* rtc_time)
+rtc_err_t rtc_get_precise(rtc_time_t* rtc_time)
 {
     static const uint8_t month_table[12] =
                          {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -243,6 +268,23 @@ rtc_err_t rtc_get(rtc_time_t* rtc_time)
 }
 
 /*
+ * Getting date and time function with 1 minute precision
+ */
+rtc_err_t rtc_get(rtc_time_t* rtc_time)
+{
+    memcpy(rtc_time, &rtc_ctrl.rtc_time, sizeof(rtc_time_t));
+    return RTC_NO_ERR;
+}
+
+/*
+ * Get RTC error status
+ */
+rtc_err_t rtc_get_err_status(void)
+{
+    return rtc_ctrl.rtc_err_status;
+}
+
+/*
  * ----------------------------------------------------------------------------
  * Hardware interrupts
  * ----------------------------------------------------------------------------
@@ -250,7 +292,20 @@ rtc_err_t rtc_get(rtc_time_t* rtc_time)
 void RTC_IRQHandler(void)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    int i = 0;
+    uint32_t rtc_cnt = 0;
+
     if (LL_RTC_IsActiveFlag_SEC(RTC)) {
+        rtc_cnt = LL_RTC_TIME_Get(RTC);
+        for (i = 0; i < rtc_ctrl.num_task_notify; i++) {
+            if (!(rtc_cnt % rtc_ctrl.rtc_task_notifier[i].period)) {
+                vTaskNotifyGiveFromISR(rtc_ctrl.rtc_task_notifier[i].xTaskToNotify,
+                                        &xHigherPriorityTaskWoken);
+            }
+        }
+        if (!(rtc_cnt % RTC_SECONDS_PER_MINUTE)) {
+            rtc_get_precise(&rtc_ctrl.rtc_time);
+        }
         LL_RTC_ClearFlag_SEC(RTC);
     }
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
