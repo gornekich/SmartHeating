@@ -3,6 +3,14 @@
 
 #include "peripheral.h"
 
+#define RTC_SECONDS_PER_LEAP_YEAR           31622400
+#define RTC_SECONDS_PER_YEAR                31536000
+#define RTC_SECONDS_PER_DAY                 86400U
+#define RTC_SECONDS_PER_HOUR                3600U
+#define RTC_SECONDS_PER_MINUTE              60U
+#define RTC_INIT_YEAR                       1970U
+#define RTC_MAX_YEAR                        2099U
+
 /*
  * Typedef for storing time
  */
