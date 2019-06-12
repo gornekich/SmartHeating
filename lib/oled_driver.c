@@ -35,7 +35,7 @@ static void oled_hw_config(void)
     LL_SPI_SetTransferDirection(OLED_SPI, LL_SPI_FULL_DUPLEX);
     LL_SPI_SetTransferBitOrder(OLED_SPI, OLED_SPI_BIT_ORDER);
     LL_SPI_SetDataWidth(OLED_SPI, OLED_SPI_DATA_WIDTH);
-    // LL_SPI_EnableNSSPulseMgt(OLED_SPI);
+    LL_SPI_SetNSSMode(OLED_SPI, LL_SPI_NSS_SOFT);
     LL_SPI_Enable(OLED_SPI);
     return;
 }
