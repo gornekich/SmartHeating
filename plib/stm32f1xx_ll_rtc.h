@@ -479,6 +479,7 @@ __STATIC_INLINE void LL_RTC_TAMPER_Enable(BKP_TypeDef *BKPx)
   */
 __STATIC_INLINE void LL_RTC_TAMPER_Disable(BKP_TypeDef *BKPx)
 {
+  (void) BKPx;
   CLEAR_BIT(BKP->CR, BKP_CR_TPE);
 }
 
@@ -567,6 +568,7 @@ __STATIC_INLINE uint32_t LL_RTC_TAMPER_GetActiveLevel(BKP_TypeDef *BKPx)
   */
 __STATIC_INLINE void LL_RTC_BKP_SetRegister(BKP_TypeDef *BKPx, uint32_t BackupRegister, uint32_t Data)
 {
+  (void) BKPx;
   register uint32_t tmp = 0U;
 
   tmp = (uint32_t)BKP_BASE;
@@ -627,6 +629,7 @@ __STATIC_INLINE void LL_RTC_BKP_SetRegister(BKP_TypeDef *BKPx, uint32_t BackupRe
   */
 __STATIC_INLINE uint32_t LL_RTC_BKP_GetRegister(BKP_TypeDef *BKPx, uint32_t BackupRegister)
 {
+  (void) BKPx;
   register uint32_t tmp = 0U;
 
   tmp = (uint32_t)BKP_BASE;
