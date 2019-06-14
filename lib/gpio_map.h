@@ -17,4 +17,12 @@
 #define OLED_MOSI_PORT                      GPIOA
 #define OLED_MOSI_PIN                       LL_GPIO_PIN_7
 
+/*
+ * Terminal pins
+ */
+#define TERM_USART_TX_PORT                  GPIOA
+#define TERM_USART_TX_PIN                   LL_GPIO_PIN_9
+#define TERM_USART_RX_PORT                  GPIOA
+#define TERM_USART_RX_PIN                   LL_GPIO_PIN_10
+
 #endif // _GPIO_MAP_H_

@@ -6,6 +6,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "terminal.h"
 #include "err_manager.h"
 
 /**
@@ -63,6 +64,9 @@ void gpio_config(void)
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
     LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_13, LL_GPIO_MODE_OUTPUT);
     LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
+    // LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
+    // LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_12, LL_GPIO_MODE_OUTPUT);
+    // LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_12);
 }
 
 int main(void)
@@ -70,7 +74,8 @@ int main(void)
     rcc_config();
     gpio_config();
     NVIC_SetPriorityGrouping(0);
-
+    xTaskCreateStatic(terminal_manager, "TERM_MAN", TERM_MAN_STACK_DEPTH,
+                      NULL, 3, terminal_manager_ts, &terminal_manager_tb);
     xTaskCreateStatic(err_manager, "ERR_MAN", ERR_MAN_STACK_DEPTH,
                       NULL, 1, err_manager_ts, &err_manager_tb);
     vTaskStartScheduler();
