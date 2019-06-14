@@ -3,6 +3,7 @@
 #include "stm32f1xx_ll_pwr.h"
 #include "stm32f1xx_ll_rcc.h"
 
+#include "terminal_cmds.h"
 #include <string.h>
 
 /*
@@ -66,7 +67,6 @@ rtc_err_t rtc_add_notifier(rtc_task_notifier_t *task_notifier)
 rtc_err_t rtc_init(void)
 {
     uint32_t bkp_reg_val;
-    rtc_err_t rtc_err;
 
     /*
      * Check backup register value to detect RTC reset
@@ -132,7 +132,7 @@ rtc_err_t rtc_init(void)
 /*
  * Setting date and time function
  */
-rtc_err_t rtc_set(rtc_time_t* rtc_time)
+rtc_err_t rtc_set(rtc_time_t* time)
 {
     static const uint8_t month_table[12] =
                          {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -143,30 +143,34 @@ rtc_err_t rtc_set(rtc_time_t* rtc_time)
     /*
      * Check input parameters
      */
-    if (rtc_time->year < RTC_INIT_YEAR || rtc_time->year > RTC_MAX_YEAR ||
-        rtc_time->month < 1 || rtc_time->month > 12  ||
-        rtc_time->date < 1  || rtc_time->date > 31   ||
-        rtc_time->hour > 23 || rtc_time->minute > 59 || rtc_time->second > 59) {
+    if (time->year < RTC_INIT_YEAR || time->year > RTC_MAX_YEAR ||
+        time->month < 1 || time->month > 12  ||
+        time->date < 1  || time->date > 31   ||
+        time->hour > 23 || time->minute > 59 || time->second > 59) {
         return RTC_WRONG_TIME;
     }
     /*
+     * Update internal RTC stracture
+     */
+    memcpy(&rtc_ctrl.rtc_time, time, sizeof(rtc_time_t));
+    /*
      * Calclate RTC CNT register
      */
-    for (year_iter = RTC_INIT_YEAR; year_iter < rtc_time->year; year_iter++) {
+    for (year_iter = RTC_INIT_YEAR; year_iter < time->year; year_iter++) {
         if (rtc_year_is_leap(year_iter))
             rtc_cnt += RTC_SECONDS_PER_LEAP_YEAR;
         else
             rtc_cnt += RTC_SECONDS_PER_YEAR;
     }
-    for (month_iter = 0 ; month_iter < rtc_time->month - 1; month_iter++)
+    for (month_iter = 0 ; month_iter < time->month - 1; month_iter++)
         rtc_cnt += (((uint32_t) month_table[month_iter]) * RTC_SECONDS_PER_DAY);
     // TODO check it!
-    if ((rtc_year_is_leap(rtc_time->year)) && rtc_time->month > 2)
+    if ((rtc_year_is_leap(time->year)) && time->month > 2)
         rtc_cnt += RTC_SECONDS_PER_DAY;
-    rtc_cnt += (uint32_t) (rtc_time->date - 1) * RTC_SECONDS_PER_DAY;
-    rtc_cnt += (uint32_t) (rtc_time->hour * RTC_SECONDS_PER_HOUR);
-    rtc_cnt += (uint32_t) (rtc_time->minute * RTC_SECONDS_PER_MINUTE);
-    rtc_cnt += rtc_time->second;
+    rtc_cnt += (uint32_t) (time->date - 1) * RTC_SECONDS_PER_DAY;
+    rtc_cnt += (uint32_t) (time->hour * RTC_SECONDS_PER_HOUR);
+    rtc_cnt += (uint32_t) (time->minute * RTC_SECONDS_PER_MINUTE);
+    rtc_cnt += time->second;
     /*
      * Enable access to backup registers
      */
@@ -282,6 +286,25 @@ rtc_err_t rtc_get(rtc_time_t* rtc_time)
 rtc_err_t rtc_get_err_status(void)
 {
     return rtc_ctrl.rtc_err_status;
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ * Terminal commands implementation
+ * ----------------------------------------------------------------------------
+ */
+
+int cmd_set_rtc(uint8_t *args)
+{
+    rtc_time_t *time = (rtc_time_t *) args;
+
+    if (rtc_set(time))
+        goto cmd_set_rtc_error;
+    memcpy(args, "OK", 3);
+    return 3;
+cmd_set_rtc_error:
+    memcpy(args, "ER", 3);
+    return 3;
 }
 
 /*
