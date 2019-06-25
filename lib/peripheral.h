@@ -6,6 +6,7 @@
 #include "stm32f1xx_ll_rtc.h"
 #include "stm32f1xx_ll_usart.h"
 #include "stm32f1xx_ll_dma.h"
+#include "stm32f1xx_ll_tim.h"
 #include "FreeRTOSConfig.h"
 
 /*
@@ -59,5 +60,13 @@
 #define TERM_DMA_PERIPH_INC_MODE                LL_DMA_PERIPH_NOINCREMENT
 #define TERM_DMA_PERIPH_SIZE                    LL_DMA_PDATAALIGN_BYTE
 #define TERM_DMA_SRC_ADDR                       (uint32_t)&((TERM_USART)->DR)
+
+/*
+ * Timer for OneWire delay function
+ * APB1CLK = 36 MHz, F_inp = 72MHz, PSC = 71, F_tick = 1 MHz
+ */
+#define OW_TIM                                  TIM2
+#define OW_TIM_PSC                              71
+#define OW_TIM_ARR                              999999
 
 #endif // _PERIPHERAL_H_
