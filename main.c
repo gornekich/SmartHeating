@@ -8,6 +8,7 @@
 
 #include "terminal.h"
 #include "err_manager.h"
+#include "temperature.h"
 
 /**
   * System Clock Configuration
@@ -76,6 +77,8 @@ int main(void)
     NVIC_SetPriorityGrouping(0);
     xTaskCreateStatic(terminal_manager, "TERM_MAN", TERM_MAN_STACK_DEPTH,
                       NULL, 3, terminal_manager_ts, &terminal_manager_tb);
+    xTaskCreateStatic(temp_manager, "TEMP_MAN", TEMP_MAN_STACK_DEPTH,
+                      NULL, 2, temp_manager_ts, &temp_manager_tb);
     xTaskCreateStatic(err_manager, "ERR_MAN", ERR_MAN_STACK_DEPTH,
                       NULL, 1, err_manager_ts, &err_manager_tb);
     vTaskStartScheduler();

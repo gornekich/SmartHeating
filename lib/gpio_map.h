@@ -25,4 +25,15 @@
 #define TERM_USART_RX_PORT                  GPIOA
 #define TERM_USART_RX_PIN                   LL_GPIO_PIN_10
 
+/*
+ * OneWire pins
+ * TODO change!!!
+ */
+#define OW_PORT0                            GPIOA
+#define OW_PIN0                             LL_GPIO_PIN_0
+#define OW_PORT1                            GPIOA
+#define OW_PIN1                             LL_GPIO_PIN_1
+#define OW_PORT2                            GPIOA
+#define OW_PIN2                             LL_GPIO_PIN_2
+
 #endif // _GPIO_MAP_H_
