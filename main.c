@@ -9,6 +9,7 @@
 #include "terminal.h"
 #include "err_manager.h"
 #include "temperature.h"
+#include "motors.h"
 
 /**
   * System Clock Configuration
@@ -79,6 +80,8 @@ int main(void)
                       NULL, 3, terminal_manager_ts, &terminal_manager_tb);
     xTaskCreateStatic(temp_manager, "TEMP_MAN", TEMP_MAN_STACK_DEPTH,
                       NULL, 2, temp_manager_ts, &temp_manager_tb);
+    xTaskCreateStatic(motors_manager, "MOTORS_MAN", MOTORS_MAN_STACK_DEPTH,
+                      NULL, 2, motors_manager_ts, &motors_manager_tb);
     xTaskCreateStatic(err_manager, "ERR_MAN", ERR_MAN_STACK_DEPTH,
                       NULL, 1, err_manager_ts, &err_manager_tb);
     vTaskStartScheduler();
