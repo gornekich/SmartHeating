@@ -118,7 +118,6 @@ static uint8_t ow_search(ow_ctrl_t *ow_ctrl, uint8_t cmd)
     return search_result;
 }
 
-
 /*
  * Public functions
  */
@@ -279,4 +278,22 @@ void ow_select(ow_ctrl_t *ow_ctrl, uint8_t *rom)
         ow_write_byte(ow_ctrl, rom[i]);
     }
     return;
+}
+
+uint8_t ow_crc8(uint8_t *src, uint8_t len)
+{
+    uint8_t crc = 0;
+    uint8_t inbyte, i, mix;
+    while (len--) {
+        inbyte = *src++;
+        for (i = 8; i; i--) {
+            mix = (crc ^ inbyte) & 0x01;
+            crc >>= 1;
+            if (mix) {
+                crc ^= 0x8C;
+            }
+            inbyte >>= 1;
+        }
+    }
+    return crc;
 }

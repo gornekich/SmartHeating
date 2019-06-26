@@ -17,17 +17,10 @@
 #define OW_CMD_SKIPROM             0xCC
 
 /*
- * Enum of OneWire errors
- */
-typedef enum {
-    OW_NO_ERR = 0x00,
-} ow_err_t;
-/*
  * Typedef for OneWire peripheral control
  */
 typedef struct {
     ow_gpio_t ow_gpio;
-    ow_err_t ow_err;
     uint8_t last_discr;
     uint8_t last_fam_discr;
     uint8_t last_dev_flag;
@@ -92,4 +85,10 @@ void ow_get_full_rom(ow_ctrl_t *ow_ctrl, uint8_t *rom);
  * Select specific device on OneWire line
  */
 void ow_select(ow_ctrl_t *ow_ctrl, uint8_t *rom);
+
+/*
+ * OneWire CRC calculation function
+ */
+uint8_t ow_crc8(uint8_t *src, uint8_t len);
+
 #endif //_ONEWIRE_H_
