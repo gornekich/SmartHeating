@@ -14,8 +14,9 @@ void ow_hw_config(const ow_gpio_t *ow_gpio)
      * GPIO configuration
      * Take care of clocking corresponding ports!
      */
-    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
     LL_GPIO_SetPinMode(ow_gpio->port, ow_gpio->pin, LL_GPIO_MODE_OUTPUT);
+    LL_GPIO_SetPinSpeed(ow_gpio->port, ow_gpio->pin, LL_GPIO_SPEED_FREQ_HIGH);
     LL_GPIO_SetOutputPin(ow_gpio->port, ow_gpio->pin);
     /*
      * Timer configuration
@@ -24,6 +25,8 @@ void ow_hw_config(const ow_gpio_t *ow_gpio)
     LL_TIM_SetCounterMode(OW_TIM, LL_TIM_COUNTERMODE_UP);
     LL_TIM_SetPrescaler(OW_TIM, OW_TIM_PSC);
     LL_TIM_SetAutoReload(OW_TIM, OW_TIM_ARR);
+    LL_TIM_DisableCounter(OW_TIM);
+    LL_TIM_ClearFlag_UPDATE(OW_TIM);
     return;
 }
 
@@ -42,7 +45,7 @@ void ow_set_output(const ow_gpio_t *ow_gpio)
  */
 void ow_output_low(const ow_gpio_t *ow_gpio)
 {
-    LL_GPIO_SetOutputPin(ow_gpio->port, ow_gpio->pin);
+    LL_GPIO_ResetOutputPin(ow_gpio->port, ow_gpio->pin);
     return;
 }
 
@@ -51,7 +54,7 @@ void ow_output_low(const ow_gpio_t *ow_gpio)
  */
 void ow_output_high(const ow_gpio_t *ow_gpio)
 {
-    LL_GPIO_ResetOutputPin(ow_gpio->port, ow_gpio->pin);
+    LL_GPIO_SetOutputPin(ow_gpio->port, ow_gpio->pin);
     return;
 }
 
@@ -77,13 +80,11 @@ uint32_t ow_read_input(const ow_gpio_t *ow_gpio)
  */
 void ow_delay_us(uint32_t time_us)
 {
-    uint32_t current_tick = 0;
-
+    LL_TIM_SetCounter(OW_TIM, 0);
+    LL_TIM_SetAutoReload(OW_TIM, time_us);
     LL_TIM_EnableCounter(OW_TIM);
-    LL_TIM_SetCounter(OW_TIM, 0); // TODO check if it resets by hardware
-    while (current_tick < time_us) {
-        current_tick = LL_TIM_GetCounter(OW_TIM);
-    }
+    while (!LL_TIM_IsActiveFlag_UPDATE(OW_TIM));
+    LL_TIM_ClearFlag_UPDATE(OW_TIM);
     LL_TIM_DisableCounter(OW_TIM);
     return;
 }

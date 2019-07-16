@@ -11,7 +11,7 @@
 static uint8_t ow_search(ow_ctrl_t *ow_ctrl, uint8_t cmd)
 {
     uint8_t id_bit_number;
-    uint8_t last_zero, rom_byte_number, search_result;
+    uint8_t last_zero, rom_byte_number, search_fail;
     uint8_t id_bit, cmp_id_bit;
     uint8_t rom_byte_mask, search_direction;
 
@@ -20,7 +20,7 @@ static uint8_t ow_search(ow_ctrl_t *ow_ctrl, uint8_t cmd)
     last_zero = 0;
     rom_byte_number = 0;
     rom_byte_mask = 1;
-    search_result = 0;
+    search_fail = 1;
 
     /* Check if any devices */
     if (!ow_ctrl->last_dev_flag) {
@@ -30,7 +30,7 @@ static uint8_t ow_search(ow_ctrl_t *ow_ctrl, uint8_t cmd)
             ow_ctrl->last_discr = 0;
             ow_ctrl->last_dev_flag= 0;
             ow_ctrl->last_fam_discr = 0;
-            return 0;
+            return 1;
         }
 
         /* Issue the search command */
@@ -95,7 +95,7 @@ static uint8_t ow_search(ow_ctrl_t *ow_ctrl, uint8_t cmd)
 
         /* If the search was successful then */
         if (!(id_bit_number < 65)) {
-            /* Search successful so set LastDiscrepancy, LastDeviceFlag, search_result */
+            /* Search successful so set LastDiscrepancy, LastDeviceFlag, search_fail */
             ow_ctrl->last_discr = last_zero;
 
             /* Check for last device */
@@ -103,19 +103,19 @@ static uint8_t ow_search(ow_ctrl_t *ow_ctrl, uint8_t cmd)
                 ow_ctrl->last_dev_flag = 1;
             }
 
-            search_result = 1;
+            search_fail = 0;
         }
     }
 
     /* If no device found then reset counters so next 'search' will be like a first */
-    if (!search_result || !ow_ctrl->rom[0]) {
+    if (search_fail || !ow_ctrl->rom[0]) {
         ow_ctrl->last_discr = 0;
         ow_ctrl->last_dev_flag = 0;
         ow_ctrl->last_fam_discr = 0;
-        search_result = 0;
+        search_fail = 1;
     }
 
-    return search_result;
+    return search_fail;
 }
 
 /*
@@ -128,6 +128,7 @@ static uint8_t ow_search(ow_ctrl_t *ow_ctrl, uint8_t cmd)
 void ow_init(ow_ctrl_t *ow_ctrl)
 {
     ow_hw_config(&ow_ctrl->ow_gpio);
+    ow_reset(ow_ctrl);
     return;
 }
 
@@ -151,6 +152,7 @@ uint32_t ow_reset(ow_ctrl_t *ow_ctrl)
      * Check presence pulse
      */
     presense_pulse = ow_read_input(&ow_ctrl->ow_gpio);
+    ow_delay_us(410);
     return presense_pulse;
 }
 

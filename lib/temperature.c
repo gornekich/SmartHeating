@@ -17,8 +17,16 @@ static temp_ctrl_t temp_ctrl;
  */
 void temp_get_temp(float *temp_addr)
 {
-    memcpy(temp_addr, temp_ctrl.temp, NUMBER_OF_TEMP_SNS);
+    memcpy(temp_addr, temp_ctrl.temp, NUMBER_OF_TEMP_SNS * sizeof(float));
     return;
+}
+
+/*
+ * Public function for reading error status
+ */
+temp_err_t temp_get_err(void)
+{
+    return temp_ctrl.temp_err;
 }
 
 /*
@@ -45,11 +53,11 @@ void temp_manager(void *arg)
         ow_init(&temp_ctrl.ow_ctrl[i]);
         err = ow_start_search(&temp_ctrl.ow_ctrl[i]);
         if (err) {
-            temp_err_set(temp_ctrl, TEMP_LINE_ERR, i);
-            continue;
+           temp_err_set(temp_ctrl, TEMP_LINE_ERR, i);
+           continue;
         }
         err = ds_set_resolution(&temp_ctrl.ow_ctrl[i], temp_ctrl.ow_ctrl[i].rom,
-                                DS_RESOLUTION_12BITS);
+                                DS_RESOLUTION_11BITS);
         if (err) {
             temp_err_set(temp_ctrl, TEMP_NOT_FOUND, i);
             continue;
@@ -71,7 +79,8 @@ void temp_manager(void *arg)
             /*
              * Wait for conversion finish or timeout
              */
-            while (!ds_finished(&temp_ctrl.ow_ctrl[i]) && (timeout-- > 0));
+            vTaskDelay(20);
+            while ((!ds_finished(&temp_ctrl.ow_ctrl[i])) && (timeout-- > 0));
             if (timeout == 0)
                 temp_err_set(temp_ctrl, TEMP_COMM_TIMEOUT, i);
             /*

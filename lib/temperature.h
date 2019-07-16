@@ -46,6 +46,15 @@ StackType_t temp_manager_ts[TEMP_MAN_STACK_DEPTH];
 StaticTask_t temp_manager_tb;
 
 /*
+ * Public function for reading current temperature
+ */
+void temp_get_temp(float *temp_addr);
+
+/*
+ * Public function for reading error status
+ */
+temp_err_t temp_get_err(void);
+/*
  * Main manager for temperature sensors processing
  */
 void temp_manager(void *arg);

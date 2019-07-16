@@ -48,14 +48,14 @@ uint8_t ds_read(ow_ctrl_t *ow_ctrl, uint8_t *rom, float *temp)
     }
     
     /* Check if line is released, if it is, then conversion is complete */
-    if (!ds_finished(ow_ctrl)) {
+    if (!ow_read_bit(ow_ctrl)) {
         /* Conversion is not finished yet */
         return 1; 
     }
 
     ow_reset(ow_ctrl);
     ow_select(ow_ctrl, rom);
-    ow_write_byte(ow_ctrl, DS18B20_CMD_CONVERTTEMP);
+    ow_write_byte(ow_ctrl, OW_CMD_RSCRATCHPAD);
     /* Get data */
     for (i = 0; i < 9; i++) {
         /* Read byte by byte */
@@ -68,7 +68,7 @@ uint8_t ds_read(ow_ctrl_t *ow_ctrl, uint8_t *rom, float *temp)
     /* Check if CRC is ok */
     if (crc != data[8]) {
         /* CRC invalid */
-        return 1;
+        // return 1;
     }
     
     /* First two bytes of scratchpad are temperature values */
@@ -125,7 +125,7 @@ uint8_t ds_read(ow_ctrl_t *ow_ctrl, uint8_t *rom, float *temp)
     
     /* Set to pointer */
     *temp = decimal;
-    
+
     /* Return 0, temperature valid */
     return 0;
 }
