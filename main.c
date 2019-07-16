@@ -7,7 +7,7 @@
 #include "task.h"
 
 #include "terminal.h"
-#include "err_manager.h"
+#include "user_interface.h"
 #include "temperature.h"
 #include "motors.h"
 
@@ -82,8 +82,8 @@ int main(void)
                       NULL, 2, temp_manager_ts, &temp_manager_tb);
     xTaskCreateStatic(motors_manager, "MOTORS_MAN", MOTORS_MAN_STACK_DEPTH,
                       NULL, 2, motors_manager_ts, &motors_manager_tb);
-    xTaskCreateStatic(err_manager, "ERR_MAN", ERR_MAN_STACK_DEPTH,
-                      NULL, 1, err_manager_ts, &err_manager_tb);
+    xTaskCreateStatic(ui_manager, "UI_MAN", UI_MAN_STACK_DEPTH,
+                      NULL, 1, ui_manager_ts, &ui_manager_tb);
     vTaskStartScheduler();
     return 0;
 }
