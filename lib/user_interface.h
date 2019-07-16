@@ -8,7 +8,7 @@
 #include "rtc.h"
 #include "temperature.h"
 
-#define UI_SCREEN_UPDATE_MS         1000
+#define UI_SCREEN_UPDATE_MS         200
 
 /*
  * Typedef for user interface manager

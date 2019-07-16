@@ -79,11 +79,11 @@ int main(void)
     xTaskCreateStatic(terminal_manager, "TERM_MAN", TERM_MAN_STACK_DEPTH,
                       NULL, 3, terminal_manager_ts, &terminal_manager_tb);
     xTaskCreateStatic(temp_manager, "TEMP_MAN", TEMP_MAN_STACK_DEPTH,
-                      NULL, 2, temp_manager_ts, &temp_manager_tb);
+                      NULL, 5, temp_manager_ts, &temp_manager_tb);
     xTaskCreateStatic(motors_manager, "MOTORS_MAN", MOTORS_MAN_STACK_DEPTH,
                       NULL, 2, motors_manager_ts, &motors_manager_tb);
     xTaskCreateStatic(ui_manager, "UI_MAN", UI_MAN_STACK_DEPTH,
-                      NULL, 1, ui_manager_ts, &ui_manager_tb);
+                      NULL, 3, ui_manager_ts, &ui_manager_tb);
     vTaskStartScheduler();
     return 0;
 }

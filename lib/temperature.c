@@ -64,7 +64,7 @@ void temp_manager(void *arg)
         }
     }
     temp_ctrl.task_notifier.xTaskToNotify = xTaskGetCurrentTaskHandle();
-    temp_ctrl.task_notifier.period = 5;
+    temp_ctrl.task_notifier.period = 1;
     if (rtc_add_notifier(&temp_ctrl.task_notifier)) 
         temp_err_set(temp_ctrl, TEMP_NOTIFIER_ERR, 4);
 
@@ -80,7 +80,9 @@ void temp_manager(void *arg)
              * Wait for conversion finish or timeout
              */
             vTaskDelay(20);
-            while ((!ds_finished(&temp_ctrl.ow_ctrl[i])) && (timeout-- > 0));
+            while ((!ds_finished(&temp_ctrl.ow_ctrl[i])) && (timeout-- > 0)) {
+                vTaskDelay(20);
+            }
             if (timeout == 0)
                 temp_err_set(temp_ctrl, TEMP_COMM_TIMEOUT, i);
             /*
