@@ -62,6 +62,15 @@
 #define TERM_DMA_SRC_ADDR                       (uint32_t)&((TERM_USART)->DR)
 
 /*
+ * Motor control PWM timer
+ * APB1_CLK = 36 MHz, F_inp = 72MHz, PSC = 71, F_tick = 1 MHz
+ */
+#define MOTOR_TIM                               TIM4
+#define MOTOR_PWM_TIM_PSC                       71
+#define MOTOR_PWM_TIM_ARR                       999
+#define MOTOR_PWM_TIM_CCR_INIT                  99
+
+/*
  * Timer for OneWire delay function
  * APB1CLK = 36 MHz, F_inp = 72MHz, PSC = 71, F_tick = 1 MHz
  */

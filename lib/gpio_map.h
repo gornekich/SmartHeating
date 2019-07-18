@@ -36,4 +36,12 @@
 #define OW_PORT2                            GPIOA
 #define OW_PIN2                             LL_GPIO_PIN_2
 
+/*
+ * Motor control pins
+ */
+#define MOTOR_PORT0                         GPIOB
+#define MOTOR_PIN0                          LL_GPIO_PIN_8
+#define MOTOR_PORT1                         GPIOB
+#define MOTOR_PIN1                          LL_GPIO_PIN_9
+
 #endif // _GPIO_MAP_H_
