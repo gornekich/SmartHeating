@@ -24,10 +24,10 @@ enum {
  * with 'cmd_' prefix
  */
 #define TERM_CMD_DEF(cmd_num, cmd_aliase, cmd_handler) \
-int cmd_##cmd_handler(uint8_t *args);
+int cmd_##cmd_handler(void *args);
 #include "terminal_cmds_defs.h"
 #undef TERM_CMD_DEF
 
-extern int (* const commands_handlers[])(uint8_t *);
+extern int (* const commands_handlers[])(void *);
 
 #endif

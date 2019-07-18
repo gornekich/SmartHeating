@@ -5,7 +5,7 @@
  */
 #define TERM_CMD_DEF(cmd_num, cmd_aliase, cmd_handler) \
         [cmd_num] = cmd_##cmd_handler,
-int (* const commands_handlers[])(uint8_t *) = {
+int (* const commands_handlers[])(void *) = {
         #include "terminal_cmds_defs.h"
 };
 #undef TERM_CMD_DEF
@@ -25,7 +25,7 @@ int (* const commands_handlers[])(uint8_t *) = {
  * Input: 'echo' string
  * Outpur: 'echo' string
  */
-int cmd_echo_handler(uint8_t *args)
+int cmd_echo_handler(void *args)
 {
         (void) args;
         return 4;

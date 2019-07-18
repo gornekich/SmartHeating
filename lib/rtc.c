@@ -294,7 +294,7 @@ rtc_err_t rtc_get_err_status(void)
  * ----------------------------------------------------------------------------
  */
 
-int cmd_set_rtc(uint8_t *args)
+int cmd_set_rtc(void *args)
 {
     rtc_time_t *time = (rtc_time_t *) args;
 
