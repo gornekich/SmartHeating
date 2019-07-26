@@ -20,7 +20,7 @@
  * Typedef for OneWire peripheral control
  */
 typedef struct {
-    ow_gpio_t ow_gpio;
+    gpio_t ow_gpio;
     uint8_t last_discr;
     uint8_t last_fam_discr;
     uint8_t last_dev_flag;

@@ -44,4 +44,12 @@
 #define MOTOR_PORT1                         GPIOB
 #define MOTOR_PIN1                          LL_GPIO_PIN_9
 
+/*
+ * Typedef for one gpio control
+ */
+typedef struct {
+        GPIO_TypeDef *port;
+        uint32_t pin;
+} gpio_t;
+
 #endif // _GPIO_MAP_H_
