@@ -1,12 +1,14 @@
 #ifndef _PERIPHERAL_H_
 #define _PERIPHERAL_H_
 
+#include "dev_map.h"
 #include "stm32f103xb.h"
 #include "stm32f1xx_ll_spi.h"
 #include "stm32f1xx_ll_rtc.h"
 #include "stm32f1xx_ll_usart.h"
 #include "stm32f1xx_ll_dma.h"
 #include "stm32f1xx_ll_tim.h"
+#include "stm32f1xx_ll_adc.h"
 #include "FreeRTOSConfig.h"
 
 /*
@@ -69,6 +71,50 @@
 #define MOTOR_PWM_TIM_PSC                       71
 #define MOTOR_PWM_TIM_ARR                       999
 #define MOTOR_PWM_TIM_CCR_INIT                  99
+
+/*
+ * ADC configuration for 2 channels
+ */
+#define MOTOR_ADC                               ADC1
+#define MOTOR_ADC_CHANNEL0                      LL_ADC_CHANNEL_3
+#define MOTOR_ADC_CHANNEL1                      LL_ADC_CHANNEL_4
+#define MOTOR_ADC_ALIGN                         LL_ADC_DATA_ALIGN_RIGHT
+#define MOTOR_ADC_SEQ_SCAN                      LL_ADC_SEQ_SCAN_ENABLE
+#define MOTOR_ADC_SEQ_LEN                       LL_ADC_REG_SEQ_SCAN_ENABLE_2RANKS
+#define MOTOR_ADC_TRIG                          LL_ADC_REG_TRIG_EXT_TIM1_CH1
+#define MOTOR_ADC_TRIG_POLARITY                 LL_ADC_REG_TRIG_EXT_RISING
+#define MOTOR_ADC_SINGLE_MODE                   LL_ADC_REG_CONV_SINGLE
+#define MOTOR_ADC_DMA_MODE                      LL_ADC_REG_DMA_TRANSFER_UNLIMITED
+#define MOTOR_ADC_SAMPL_TIME                    LL_ADC_SAMPLINGTIME_1CYCLE_5
+#define MOTOR_ADC_MEAN_SAMPLE_NUM               5
+
+/*
+ * Motor timer for ADC trigger source
+ * APB2_CLK = 72000000, PSC = 72000, F_clk = 1kHz,
+ * ARR = 1000 / Num_of_mean_samples, CCR = ARR/2 (50% duticycle)
+ */
+#define MOT_ADC_TIM                             TIM1
+#define MOT_ADC_TIM_OC_CHANNEL                  LL_TIM_CHANNEL_CH1
+#define MOT_ADC_TIM_PSC                         71999
+#define MOT_ADC_TIM_ARR                         1000 / MOTOR_ADC_MEAN_SAMPLE_NUM
+#define MOT_ADC_TIM_CCR_INIT                    (MOT_ADC_TIM_ARR) >> 1
+
+/*
+ * DMA for motor ADC feedback configuration
+ */
+#define MOTOR_DMA                               DMA1
+#define MOTOR_DMA_CHANNEL                       LL_DMA_CHANNEL_1
+#define MOTOR_DMA_IRQN                          DMA1_Channel1_IRQn
+#define MOTOR_DMA_IRQN_PRIORITY                 (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
+#define MOTOR_DMA_MODE                          LL_DMA_MODE_CIRCULAR
+#define MOTOR_DMA_DIRECTION                     LL_DMA_DIRECTION_PERIPH_TO_MEMORY
+#define MOTOR_DMA_PRIORITY                      LL_DMA_PRIORITY_HIGH
+#define MOTOR_DMA_BUFFER_SIZE                   ((MOTOR_ADC_MEAN_SAMPLE_NUM) * (NUMBER_OF_MOTORS))
+#define MOTOR_DMA_MEM_INC_MODE                  LL_DMA_MEMORY_INCREMENT
+#define MOTOR_DMA_MEM_SIZE                      LL_DMA_MDATAALIGN_HALFWORD
+#define MOTOR_DMA_PERIPH_INC_MODE               LL_DMA_PERIPH_NOINCREMENT
+#define MOTOR_DMA_PERIPH_SIZE                   LL_DMA_PDATAALIGN_HALFWORD
+#define MOTOR_DMA_SRC_ADDR                      (uint32_t)&(ADC1->DR)
 
 /*
  * Timer for OneWire delay function

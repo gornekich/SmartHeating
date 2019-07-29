@@ -27,7 +27,6 @@
 
 /*
  * OneWire pins
- * TODO change!!!
  */
 #define OW_PORT0                            GPIOA
 #define OW_PIN0                             LL_GPIO_PIN_0
@@ -44,6 +43,13 @@
 #define MOTOR_PORT1                         GPIOB
 #define MOTOR_PIN1                          LL_GPIO_PIN_9
 
+/*
+ * Motord ADC feedback pins
+ */
+#define MOT_ADC_PORT0                       GPIOA
+#define MOT_ADC_PIN0                        LL_GPIO_PIN_3
+#define MOT_ADC_PORT1                       GPIOA
+#define MOT_ADC_PIN1                        LL_GPIO_PIN_4
 /*
  * Typedef for one gpio control
  */

@@ -1,23 +1,47 @@
 #ifndef _MOTORS_H_
 #define _MOTORS_H_
 
-#include "dev_map.h"
+#include "gpio_map.h"
+#include "peripheral.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 
+#define MOTOR_MAX_ANGLE               90
+#define MOTOR_MAX_ADC_FB              2000 // TODO CHANGE!!!
 #define MOTORS_MAN_STACK_DEPTH        256
 
 #define IS_MOTOR_VALID(motor)         ((motor) < (NUMBER_OF_MOTORS))
 
 /*
+ * Motor status enum
+ */
+typedef enum {
+    STAY = 0x00,
+    MOVE = 0x01
+} motor_state_t;
+
+/*
  * Typedef for motors control
  */
 typedef struct {
-    uint8_t current_angle[NUMBER_OF_MOTORS];
-    uint8_t target_angle[NUMBER_OF_MOTORS];
+    gpio_t adc;
+    gpio_t pwm;
+    motor_state_t state;
+    uint8_t target_pos;
+    uint8_t current_pos;
+    uint8_t prev_pos;
+    uint8_t accuacy;
+} motor_ctrl_t;
+
+/*
+ * Typedef for motors manager
+ */
+typedef struct {
+    motor_ctrl_t motor[NUMBER_OF_MOTORS];
+    uint16_t adc_fb[MOTOR_DMA_BUFFER_SIZE];
     uint32_t motors_err;
-} motors_ctrl_t;
+} mot_man_ctrl_t;
 
 /*
  * Memory for terminal task
@@ -33,7 +57,7 @@ void motors_manager(void *arg);
 /*
  * Set target angle function
  */
-uint8_t motors_set_angle(uint8_t motor, uint8_t angle);
+uint8_t motors_set_target_angle(uint8_t id, uint8_t angle);
 
 /*
  * Get target angle function
