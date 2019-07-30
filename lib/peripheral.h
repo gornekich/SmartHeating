@@ -96,7 +96,7 @@
 #define MOT_ADC_TIM                             TIM1
 #define MOT_ADC_TIM_OC_CHANNEL                  LL_TIM_CHANNEL_CH1
 #define MOT_ADC_TIM_PSC                         71999
-#define MOT_ADC_TIM_ARR                         1000 / MOTOR_ADC_MEAN_SAMPLE_NUM
+#define MOT_ADC_TIM_ARR                         10000 / MOTOR_ADC_MEAN_SAMPLE_NUM
 #define MOT_ADC_TIM_CCR_INIT                    (MOT_ADC_TIM_ARR) >> 1
 
 /*

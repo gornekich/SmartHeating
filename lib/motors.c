@@ -114,9 +114,9 @@ static void motors_hw_config(void)
 /*
  * Angle to PWM conversion function
  */
-static uint16_t angle2pwm(uint8_t angle)
+static uint32_t angle2pwm(uint8_t angle)
 {
-    float angle_coef = angle / MOTOR_MAX_ANGLE;
+    float angle_coef = (float) angle / (float) MOTOR_MAX_ANGLE;
     angle_coef = angle_coef < 1 ? angle_coef : 1;
     return MOTOR_PWM_TIM_ARR * (1 - angle_coef);
 }
@@ -126,18 +126,51 @@ static uint16_t angle2pwm(uint8_t angle)
  */
 static uint8_t adc2angle(uint16_t adc_fb)
 {
-    float adc_coef = adc_fb / MOTOR_MAX_ADC_FB;
+    float adc_coef = (float) adc_fb / (float) MOTOR_MAX_ADC_FB;
     adc_coef = adc_coef < 1 ? adc_coef : 1;
     return MOTOR_MAX_ANGLE * adc_coef;
 }
 
-/* 
- * Set and maintain target angle function
+/*
+ * Comparing target and current position function
  */
-static void set_angle(uint8_t id, uint8_t angle)
+static uint8_t is_angle_not_set(uint8_t id, uint8_t angle)
 {
+    return abs(angle - motors_ctrl.motor[id].current_pos) >
+           motors_ctrl.motor[id].accuacy;
+}
+
+/*
+ * Set course target angle function
+ */
+static void set_angle_course(uint8_t id, uint8_t angle)
+{
+    uint32_t ccr_reg = angle2pwm(angle);
+
+    if (id == 0)
+        LL_TIM_OC_SetCompareCH3(MOTOR_TIM, ccr_reg);
+    if (id == 1)
+        LL_TIM_OC_SetCompareCH4(MOTOR_TIM, ccr_reg);
     return;
 }
+
+/*
+ * Set and maintain fine target angle function
+ */
+static void set_angle_fine(uint8_t id, uint8_t angle)
+{
+    int err = motors_ctrl.motor[id].target_pos -
+              motors_ctrl.motor[id].current_pos;
+    uint32_t ccr_reg = angle2pwm(angle) - motors_ctrl.motor[id].p_coeff * err;
+    ccr_reg = ccr_reg > MOTOR_PWM_TIM_ARR ? MOTOR_PWM_TIM_ARR : ccr_reg;
+
+    if (id == 0)
+        LL_TIM_OC_SetCompareCH3(MOTOR_TIM, ccr_reg);
+    if (id == 1)
+        LL_TIM_OC_SetCompareCH4(MOTOR_TIM, ccr_reg);
+    return;
+}
+
 
 
 /*
@@ -152,10 +185,20 @@ static void set_angle(uint8_t id, uint8_t angle)
 void motors_manager(void *arg)
 {
     (void) arg;
-    
+    int i = 0;
+
     motors_hw_config();
+    motors_ctrl.motor[0].accuacy = 2;
+    motors_ctrl.motor[1].accuacy = 2;
+    motors_ctrl.motor[0].p_coeff = 11;
+    motors_ctrl.motor[1].p_coeff = 11;
 
     while (1) {
+        for (i = 0; i < NUMBER_OF_MOTORS; i++) {
+            if (is_angle_not_set(i, motors_ctrl.motor[i].target_pos) &&
+                motors_ctrl.motor[i].state == MOTOR_STAY)
+                set_angle_fine(i, motors_ctrl.mogtor[i].target_pos);
+        }
         vTaskDelay(1000);
     }
     return;
@@ -168,9 +211,11 @@ uint8_t motors_set_target_angle(uint8_t id, uint8_t angle)
 {
     if (!IS_MOTOR_VALID(id))
         return 1;
-    if (abs(angle - motors_ctrl.motor[id].current_pos) > 
-        motors_ctrl.motor[id].accuacy)
+    if (is_angle_not_set(id, angle)) {
         motors_ctrl.motor[id].target_pos = angle;
+        set_angle_course(id, angle);
+        motors_ctrl.motor[id].state = MOTOR_MOVE;
+    }
     return 0;
 }
 
@@ -226,6 +271,39 @@ cmd_set_ccr_error:
 }
 
 /*
+ * Set angle command
+ */
+int cmd_set_angle(void *args) {
+    uint8_t *params = (uint8_t *) args;
+
+    if (motors_set_target_angle(params[0], params[1]) != 0)
+        goto cmd_set_angle_error;
+
+    memcpy(args, "OK", 3);
+    return 3;
+cmd_set_angle_error:
+    memcpy(args, "ER", 3);
+    return 3;
+}
+
+/*
+ * Get angle command
+ */
+int cmd_get_angle(void *args) {
+    uint8_t id = *((uint8_t *) args);
+    uint8_t angle;
+
+    if (motors_get_angle(id, &angle) != 0)
+        goto cmd_get_angle_error;
+
+    memcpy(args, &angle, 1);
+    return 1;
+cmd_get_angle_error:
+    memcpy(args, "ER", 3);
+    return 3;
+}
+
+/*
  * ----------------------------------------------------------------------------
  * Hardware interrupts
  * ----------------------------------------------------------------------------
@@ -248,7 +326,12 @@ void DMA1_Channel1_IRQHandler(void)
                 adc_fb_mean[i] += motors_ctrl.adc_fb[i + j * NUMBER_OF_MOTORS]
                                   / MOTOR_ADC_MEAN_SAMPLE_NUM;
             }
+            motors_ctrl.motor[i].prev_pos = motors_ctrl.motor[i].current_pos;
             motors_ctrl.motor[i].current_pos = adc2angle(adc_fb_mean[i]);
+            if (is_angle_not_set(i, motors_ctrl.motor[i].prev_pos))
+                motors_ctrl.motor[i].state = MOTOR_MOVE;
+            else
+                motors_ctrl.motor[i].state = MOTOR_STAY;
         }
     }
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);

@@ -8,7 +8,7 @@
 #include "task.h"
 
 #define MOTOR_MAX_ANGLE               90
-#define MOTOR_MAX_ADC_FB              2000 // TODO CHANGE!!!
+#define MOTOR_MAX_ADC_FB              3900
 #define MOTORS_MAN_STACK_DEPTH        256
 
 #define IS_MOTOR_VALID(motor)         ((motor) < (NUMBER_OF_MOTORS))
@@ -17,8 +17,8 @@
  * Motor status enum
  */
 typedef enum {
-    STAY = 0x00,
-    MOVE = 0x01
+    MOTOR_STAY = 0x00,
+    MOTOR_MOVE = 0x01
 } motor_state_t;
 
 /*
@@ -32,6 +32,7 @@ typedef struct {
     uint8_t current_pos;
     uint8_t prev_pos;
     uint8_t accuacy;
+    float p_coeff;
 } motor_ctrl_t;
 
 /*
