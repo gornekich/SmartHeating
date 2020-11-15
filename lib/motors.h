@@ -8,7 +8,7 @@
 #include "task.h"
 
 #define MOTOR_MAX_ANGLE               90
-#define MOTOR_MAX_ADC_FB              3900
+#define MOTOR_MAX_ADC_FB              4086
 #define MOTORS_MAN_STACK_DEPTH        256
 
 #define IS_MOTOR_VALID(motor)         ((motor) < (NUMBER_OF_MOTORS))

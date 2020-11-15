@@ -43,7 +43,7 @@ static void motors_hw_config(void)
     LL_TIM_EnableARRPreload(MOTOR_TIM);
     LL_TIM_OC_SetCompareCH3(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
     LL_TIM_OC_SetCompareCH4(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
-    LL_TIM_GenerateEvent_UPDATE(MOTOR_TIM);
+    // LL_TIM_GenerateEvent_UPDATE(MOTOR_TIM);
     LL_TIM_EnableCounter(MOTOR_TIM);
     /*
      * Feedback ADC pin configuration
@@ -148,9 +148,9 @@ static void set_angle_course(uint8_t id, uint8_t angle)
     uint32_t ccr_reg = angle2pwm(angle);
 
     if (id == 0)
-        LL_TIM_OC_SetCompareCH3(MOTOR_TIM, ccr_reg);
-    if (id == 1)
         LL_TIM_OC_SetCompareCH4(MOTOR_TIM, ccr_reg);
+    if (id == 1)
+        LL_TIM_OC_SetCompareCH3(MOTOR_TIM, ccr_reg);
     return;
 }
 
@@ -165,9 +165,9 @@ static void set_angle_fine(uint8_t id, uint8_t angle)
     ccr_reg = ccr_reg > MOTOR_PWM_TIM_ARR ? MOTOR_PWM_TIM_ARR : ccr_reg;
 
     if (id == 0)
-        LL_TIM_OC_SetCompareCH3(MOTOR_TIM, ccr_reg);
-    if (id == 1)
         LL_TIM_OC_SetCompareCH4(MOTOR_TIM, ccr_reg);
+    if (id == 1)
+        LL_TIM_OC_SetCompareCH3(MOTOR_TIM, ccr_reg);
     return;
 }
 
@@ -188,17 +188,17 @@ void motors_manager(void *arg)
     int i = 0;
 
     motors_hw_config();
-    motors_ctrl.motor[0].accuacy = 2;
-    motors_ctrl.motor[1].accuacy = 2;
-    motors_ctrl.motor[0].p_coeff = 11;
-    motors_ctrl.motor[1].p_coeff = 11;
+    motors_ctrl.motor[0].accuacy = 3;
+    motors_ctrl.motor[1].accuacy = 3;
+    motors_ctrl.motor[0].p_coeff = 6;
+    motors_ctrl.motor[1].p_coeff = 6;
 
     while (1) {
-        for (i = 0; i < NUMBER_OF_MOTORS; i++) {
-            if (is_angle_not_set(i, motors_ctrl.motor[i].target_pos) &&
-                motors_ctrl.motor[i].state == MOTOR_STAY)
-                set_angle_fine(i, motors_ctrl.mogtor[i].target_pos);
-        }
+        // for (i = 0; i < NUMBER_OF_MOTORS; i++) {
+        //     if (is_angle_not_set(i, motors_ctrl.motor[i].target_pos) &&
+        //         motors_ctrl.motor[i].state == MOTOR_STAY)
+        //         set_angle_fine(i, motors_ctrl.motor[i].target_pos);
+        // }
         vTaskDelay(1000);
     }
     return;
@@ -245,7 +245,11 @@ int cmd_set_arr(void *args) {
     if (*reg_arr > 1000000)
         goto cmd_set_arr_error;
 
+    LL_TIM_DisableCounter(MOTOR_TIM);
     LL_TIM_SetAutoReload(MOTOR_TIM, *reg_arr);
+    LL_TIM_SetCounter(MOTOR_TIM, 0);
+    LL_TIM_EnableCounter(MOTOR_TIM);
+
     memcpy(args, "OK", 3);
     return 3;
 cmd_set_arr_error:

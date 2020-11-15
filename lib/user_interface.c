@@ -110,7 +110,7 @@ void ui_manager(void *arg)
 
     oled_config();
     printf_config();
-    rtc_init();
+    // rtc_init();
     ui_welcome();
     ui_ctrl.ui_screen_update = UI_SCREEN_UPDATE_MS;
 
