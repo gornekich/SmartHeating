@@ -118,7 +118,7 @@ static uint32_t angle2pwm(uint8_t angle)
 {
     float angle_coef = (float) angle / (float) MOTOR_MAX_ANGLE;
     angle_coef = angle_coef < 1 ? angle_coef : 1;
-    return MOTOR_PWM_TIM_ARR * (1 - angle_coef);
+    return 350 * (1 - angle_coef) + 10;
 }
 
 /*
